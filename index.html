@@ -408,7 +408,6 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     },650);
   }
 
-  function track(ev,params){try{if(typeof fbq==="function")fbq("track",ev,params||{});}catch(e){}}
   function send(stage){
     lead.stage=stage;
     if(!WEBHOOK_URL)return;
@@ -423,7 +422,6 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     ee.style.display="none";
     lead.fname=fn.value.trim();lead.lname=document.getElementById("lname").value.trim();lead.email=em.value.trim();
     send("email");
-    track("Lead");
     show("final");
   });
 
@@ -448,7 +446,6 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     lead.phone="+1"+digits();
     lead.qualified=isQualified();
     send("phone");
-    track("CompleteRegistration",{content_name:lead.qualified?"qualified":"non_qualified"});
     var dest=lead.qualified?TYP_URL:TYP_NQ_URL;
     if(dest){window.location.href=dest;}else{show("done");}
   }
