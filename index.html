@@ -1,0 +1,441 @@
+<title>Guaranteed Income Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+<style>
+/* Layout: full-width navy brand bar, then one centered column (max 720px); each step is a big bold question with either icon cards or full-width radio rows. */
+:root{
+  --bg:#ffffff;
+  --fg:#111111;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --navy:#2a1f6b;
+  --navy-fg:#ffffff;
+  --gold:#c9b26b;
+  --gold-dark:#b39a4c;
+  --gold-soft:#faf8f0;
+  --gold-pill:#fbf3cf;
+  --gold-text:#8a6a12;
+  --ok:#22a05b;
+  --blue:#2d6cf6;
+  --font:"Poppins","Segoe UI",Helvetica,Arial,sans-serif;
+}
+:root{color-scheme:light}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:18px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+
+/* brand bar */
+.bar{background:var(--navy);color:var(--navy-fg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px;text-align:center}
+.logo{font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1}
+.logo b{color:var(--gold);font-weight:700}
+
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:26px 40px}
+
+/* dashes */
+.dashes{display:flex;justify-content:center;gap:8px;margin:0 0 34px}
+.dashes i{display:block;width:40px;height:5px;border-radius:3px;background:var(--line)}
+.dashes i.on{background:var(--gold)}
+
+/* question */
+.step{display:flex;flex-direction:column;align-items:center;text-align:center}
+.pill{display:inline-block;background:var(--gold-pill);color:var(--gold-text);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px;border-radius:999px;margin:0 0 18px}
+h1{font-size:clamp(28px,5.2vw,44px);font-weight:700;line-height:1.15;margin:0 0 20px;text-wrap:balance;letter-spacing:-.01em}
+h1 small{display:block;font-size:.75em;font-weight:600;margin-top:4px}
+.hint{color:var(--fg);font-size:18px;margin:0 0 20px}
+.hint.light{color:var(--muted);font-size:16px}
+
+/* icon cards */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;width:100%;max-width:640px;justify-content:center}
+.cards.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cards.three .card:last-child{grid-column:1 / -1;max-width:calc(50% - 11px);margin:0 auto;width:100%}
+.card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:34px 20px 30px;min-height:200px;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:18px;cursor:pointer;font:inherit;color:var(--fg);font-weight:600;font-size:20px;line-height:1.25;
+  transition:border-color .15s,background .15s,transform .15s}
+.card svg{width:78px;height:78px;stroke:var(--gold);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.card:hover{border-color:var(--gold);background:var(--gold-soft)}
+.card.sel{border-color:var(--gold);background:var(--gold-soft);color:#4a4a2c}
+.card:focus-visible,.row:focus-visible,.btn:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* radio rows */
+.rows{display:grid;gap:14px;width:100%;max-width:560px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:22px 24px;font:inherit;font-size:21px;color:var(--fg);text-align:left;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;box-shadow:0 2px 0 var(--line);transition:border-color .15s,background .15s}
+.row::after{content:"";flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);background:var(--bg);transition:border-color .15s,box-shadow .15s}
+.row:hover{border-color:var(--gold)}
+.row:hover::after{border-color:var(--gold)}
+.row.sel{border-color:var(--gold);background:var(--gold-soft)}
+.row.sel::after{border-color:var(--gold-dark);box-shadow:inset 0 0 0 7px var(--gold-dark)}
+
+/* advisor line */
+.advisor{display:flex;align-items:center;gap:18px;margin:40px 0 0;color:var(--muted);font-size:17px;text-align:left;max-width:640px}
+.avatar{position:relative;flex:none;width:76px;height:76px;border-radius:50%;background:#e8ebf1 url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Cdefs%3E%3CclipPath id=%22c%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cg clip-path=%22url%28%23c%29%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e8ebf1%22/%3E%3Cpath d=%22M50 22c-14 0-22 10-22 24 0 6 2 10 4 13-4 1-7 4-7 8v8h50v-8c0-4-3-7-7-8 2-3 4-7 4-13 0-14-8-24-22-24z%22 fill=%22%23c99a6b%22/%3E%3Cpath d=%22M28 46c0-14 8-24 22-24s22 10 22 24c0 3-1 6-2 8-2-8-6-12-10-13-3 5-8 7-14 7-4 0-7-1-9-3-2 2-4 4-5 8-2-2-4-4-4-7z%22 fill=%22%235b3b23%22/%3E%3Crect x=%2233%22 y=%2222%22 width=%2234%22 height=%2218%22 rx=%2217%22 fill=%22%235b3b23%22/%3E%3Cpath d=%22M30 42c-2 6 0 12 3 16-1-6 0-10 1-14z%22 fill=%22%235b3b23%22/%3E%3Cpath d=%22M70 42c2 6 0 12-3 16 1-6 0-10-1-14z%22 fill=%22%235b3b23%22/%3E%3Cellipse cx=%2242%22 cy=%2252%22 rx=%222%22 ry=%222.3%22 fill=%22%232a1f1a%22/%3E%3Cellipse cx=%2258%22 cy=%2252%22 rx=%222%22 ry=%222.3%22 fill=%22%232a1f1a%22/%3E%3Cpath d=%22M43 63c3 3 11 3 14 0%22 stroke=%22%238a4a3a%22 stroke-width=%222%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M42 72v8l8 6 8-6v-8c4 1 7 3 10 4 8 3 12 8 12 14v10H10V90c0-6 4-11 12-14 3-1 6-3 10-4z%22 fill=%22%232a1f6b%22/%3E%3Cpath d=%22M42 72l8 10 8-10-8 6z%22 fill=%22%23f4f5f7%22/%3E%3C/g%3E%3C/svg%3E") center/cover no-repeat;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--line)}
+.avatar::after{content:"✓";position:absolute;left:-2px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.advisor b{color:var(--fg);font-weight:600}
+
+/* featured */
+.featured{border-top:1px solid var(--line);margin-top:44px;padding-top:34px;text-align:center}
+
+/* final */
+.box{width:100%;max-width:640px;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:40px 48px 36px;text-align:left}
+label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
+.phone{display:flex;border:1.5px solid var(--line);border-radius:10px;background:#f7f7f8;overflow:hidden}
+.phone .cc{display:flex;align-items:center;gap:8px;padding:0 24px;border-right:1.5px solid var(--line);font-size:16px;color:var(--fg);white-space:nowrap}
+.phone input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:24px;padding:20px 18px;color:var(--fg)}
+.phone input::placeholder{color:#b8bcc4}
+.confirm{display:block;margin:34px auto 0;font:inherit;font-size:22px;font-weight:600;color:var(--gold);background:var(--gold-soft);border:1.5px solid var(--gold-pill);border-radius:10px;padding:18px 28px;cursor:pointer;opacity:.75}
+.confirm.ready{opacity:1;color:var(--gold-text)}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:640px;margin:10px 0 0;font:inherit;font-size:28px;font-weight:600;color:#fff;background:var(--gold);border:0;border-radius:10px;padding:22px 30px;cursor:pointer;text-align:left}
+.btn:hover{background:var(--gold-dark)}
+.btn svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.err{display:none;color:#c0392b;font-size:15px;margin:10px 0 0}
+.nospam{display:flex;align-items:center;gap:18px;margin:34px 0 0;font-size:22px;font-weight:600}
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 40px;margin:30px 0 0;color:var(--muted);font-size:17px}
+.badges span{display:inline-flex;align-items:center;gap:10px}
+.badges svg{width:22px;height:22px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pill.green{background:#e6f4ea;color:#2e7d46}
+.benefits{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:18px;text-align:left;max-width:640px;font-size:22px;line-height:1.35}
+.benefits li{display:flex;gap:16px;align-items:flex-start}
+.benefits li::before{content:"✓";color:var(--ok);font-weight:700;font-size:26px;line-height:1.1;flex:none}
+.benefits b{font-weight:700}
+.ask{font-size:26px;font-weight:600;margin:0 0 36px}
+.fields{display:grid;gap:18px;width:100%;max-width:800px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.fields input{width:100%;font:inherit;font-size:24px;padding:38px 40px;border:1.5px solid var(--line);border-radius:10px;background:#f7f7f8;color:var(--fg)}
+.fields input::placeholder{color:#b8bcc4}
+.emailwrap{display:flex;border:1.5px solid var(--line);border-radius:10px;background:#f7f7f8;overflow:hidden}
+.emailwrap .ic{display:grid;place-items:center;width:118px;border-right:1.5px solid var(--line);flex:none}
+.emailwrap .ic svg{width:30px;height:30px;stroke:var(--fg);fill:none;stroke-width:1.6;stroke-linejoin:round}
+.emailwrap input{border:0;border-radius:0;background:transparent}
+.btn.wide{max-width:800px;margin-top:40px;font-size:32px;padding:26px 36px}
+.tcpa{margin:34px 0 0;color:var(--muted);font-size:14px;line-height:1.55;text-align:center}
+
+/* analyzing */
+.ring{width:64px;height:64px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--gold);animation:turn .9s linear infinite;margin:10px 0 24px}
+@keyframes turn{to{transform:rotate(360deg)}}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:10px;text-align:left;font-size:18px;color:var(--muted)}
+.checks li{opacity:.4;transition:opacity .3s}
+.checks li.on{opacity:1;color:var(--fg)}
+.checks li.on::before{content:"✓ ";color:var(--ok);font-weight:700}
+@media (prefers-reduced-motion:reduce){.ring{animation:none}}
+
+@media (max-width:560px){
+  body{font-size:16px}
+  .bar{padding-block:14px}
+  .logo{font-size:24px}
+  .wrap{padding-block:18px 28px}
+  .dashes{gap:6px;margin-bottom:22px}
+  .dashes i{width:26px;height:4px}
+  h1{font-size:26px;margin-bottom:14px}
+  .hint{font-size:16px;margin-bottom:14px}
+  .cards{gap:12px}
+  .cards.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cards.three .card:last-child{grid-column:1 / -1;max-width:none}
+  .card{min-height:0;padding:20px 12px 18px;gap:12px;font-size:16px;border-radius:14px}
+  .card svg{width:52px;height:52px}
+  .rows{gap:10px}
+  .row{font-size:18px;padding:16px 16px;min-height:56px}
+  .row::after{width:22px;height:22px}
+  .advisor{margin-top:26px;font-size:15px;gap:12px}
+  .avatar{width:54px;height:54px;font-size:18px}
+  .avatar::after{width:20px;height:20px;font-size:11px}
+  .featured{margin-top:30px;padding-top:22px}
+  .featured img{max-width:300px}
+  .pill{font-size:12px;padding:7px 14px}
+  .benefits{font-size:17px;gap:12px;margin-bottom:22px}
+  .benefits li::before{font-size:22px}
+  .ask{font-size:20px;margin-bottom:22px}
+  .fields{gap:12px}
+  .two{grid-template-columns:1fr;gap:12px}
+  .fields input{font-size:18px;padding:18px 16px}
+  .emailwrap .ic{width:56px}
+  .emailwrap .ic svg{width:24px;height:24px}
+  .box{padding:22px 16px}
+  label{font-size:17px}
+  .phone .cc{padding:0 12px;font-size:15px}
+  .phone input{font-size:18px;padding:16px 12px}
+  .confirm{margin-top:22px;font-size:18px;padding:14px 20px;width:100%}
+  .btn,.btn.wide{font-size:22px;padding:18px 18px;margin-top:14px}
+  .btn svg{width:28px;height:28px}
+  .nospam{font-size:17px;margin-top:24px;gap:12px}
+  .badges{gap:10px 24px;font-size:15px;margin-top:22px}
+  .tcpa{font-size:12px;margin-top:24px}
+}
+</style>
+
+<header class="bar"><div class="logo">Financiaro<b>Retirement</b></div></header>
+
+<div class="wrap">
+  <div class="dashes" id="dashes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <main id="main" aria-live="polite">
+
+    <!-- 1 retired -->
+    <section class="step" data-step="retired">
+      <h1>Are you currently retired?</h1>
+      <p class="hint">Please choose an option</p>
+      <div class="cards">
+        <button class="card" data-v="yes">
+          <svg viewBox="0 0 64 64"><path d="M30 58V30"/><path d="M30 30c-8-6-18-4-22 2 8-2 14 0 22-2zM30 30c4-10 14-12 20-8-8 0-14 4-20 8zM30 30c-2-10 4-18 12-18-6 4-10 10-12 18zM30 30c-10-2-16-8-14-16 6 4 10 10 14 16z"/><path d="M38 58l10-12h8l-4 12M40 50h12"/></svg>
+          Yes, I'm Retired
+        </button>
+        <button class="card" data-v="no">
+          <svg viewBox="0 0 64 64"><rect x="8" y="20" width="48" height="34" rx="4"/><path d="M22 20v-6a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v6M8 34h48M28 34v6h8v-6"/></svg>
+          No, I'm Still Working
+        </button>
+      </div>
+      <div class="advisor"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div>Answer a few quick questions &amp; we'll find the best annuity options for you.</div></div>
+    </section>
+
+    <!-- 2 age -->
+    <section class="step" data-step="age" hidden>
+      <h1>What is your age?</h1>
+      <div class="rows">
+        <button class="row" data-v="<55">I'm Under 55</button>
+        <button class="row" data-v="55-59">55 – 59</button>
+        <button class="row" data-v="60-64">60 – 64</button>
+        <button class="row" data-v="65-75">65 – 75</button>
+        <button class="row" data-v=">75">I'm Over 75</button>
+      </div>
+    </section>
+
+    <!-- 3 worry -->
+    <section class="step" data-step="worry" hidden>
+      <h1>What worries you most about retirement?</h1>
+      <p class="hint">Please choose an option</p>
+      <div class="cards">
+        <button class="card" data-v="running_out">
+          <svg viewBox="0 0 64 64"><circle cx="30" cy="32" r="22"/><path d="M20 26l6 2M40 26l-6 2M22 42c3-4 13-4 16 0"/><circle cx="23" cy="31" r="1.2"/><circle cx="37" cy="31" r="1.2"/><path d="M48 36c3 4 3 8 0 8s-3-4 0-8z"/></svg>
+          Running Out Of Money
+        </button>
+        <button class="card" data-v="market_loss">
+          <svg viewBox="0 0 64 64"><path d="M10 14l40 24M44 34l6 4-6 4M50 38h-6"/><rect x="10" y="30" width="8" height="24"/><rect x="24" y="36" width="8" height="18"/><rect x="38" y="44" width="8" height="10"/></svg>
+          Losing Money In The Markets
+        </button>
+        <button class="card" data-v="inflation">
+          <svg viewBox="0 0 64 64"><circle cx="30" cy="24" r="14"/><path d="M30 16v16M26 20h6a2.5 2.5 0 0 1 0 5h-4a2.5 2.5 0 0 0 0 5h6M16 32c0 14 10 20 24 22l6 2M42 50l4 6-6-2"/></svg>
+          Inflation
+        </button>
+        <button class="card" data-v="healthcare">
+          <svg viewBox="0 0 64 64"><path d="M26 8h8v6h6v8h-6v6h-8v-6h-6v-8h6zM8 54V38h40l8 6v10M8 46h48M14 38v-8h10v8"/><circle cx="18" cy="48" r="2"/></svg>
+          Healthcare &amp; Long Term Care Costs
+        </button>
+      </div>
+      <div class="advisor"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div>Most people pick one of these. There's no wrong answer here.</div></div>
+    </section>
+
+    <!-- 4 priority -->
+    <section class="step" data-step="priority" hidden>
+      <h1>Which of the following is most important to you?<small>(If you had to pick one)</small></h1>
+      <p class="hint">(Please pick an option below)</p>
+      <div class="cards three">
+        <button class="card" data-v="income">
+          <svg viewBox="0 0 64 64"><rect x="10" y="14" width="44" height="40" rx="4"/><path d="M10 24h44M20 8v10M44 8v10M32 30v16M28 34h6a2.5 2.5 0 0 1 0 5h-4a2.5 2.5 0 0 0 0 5h6"/></svg>
+          Guaranteed Retirement Income
+        </button>
+        <button class="card" data-v="fixed_growth">
+          <svg viewBox="0 0 64 64"><path d="M12 36l34-22M40 12l8 2-2 8"/><rect x="10" y="40" width="8" height="14"/><rect x="24" y="34" width="8" height="20"/><rect x="38" y="26" width="8" height="28"/></svg>
+          Growing Your Money At A Fixed Rate
+        </button>
+        <button class="card" data-v="no_risk_growth">
+          <svg viewBox="0 0 64 64"><path d="M10 34l12-10 10 6 14-14M40 14l8-2-2 8"/><rect x="10" y="40" width="8" height="14"/><rect x="24" y="34" width="8" height="20"/><rect x="38" y="42" width="8" height="12"/></svg>
+          Growing Your Money With No Market Risk
+        </button>
+      </div>
+      <div class="advisor"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div>This helps us narrow down the best annuity type for you.</div></div>
+    </section>
+
+    <!-- 5 portfolio -->
+    <section class="step" data-step="portfolio" hidden>
+      <h1>Please estimate the value of your retirement portfolio</h1>
+      <p class="hint light">(The reason for asking is because this helps us determine which annuity would be best for you)</p>
+      <div class="rows">
+        <button class="row" data-v="<250k">Less than $250,000</button>
+        <button class="row" data-v="250k-500k">$250,000 - $500,000</button>
+        <button class="row" data-v="500k-1m">$500,000 - $1,000,000</button>
+        <button class="row" data-v="1m-2m">$1,000,000 - $2,000,000</button>
+        <button class="row" data-v="2m-5m">$2,000,000 - $5,000,000</button>
+        <button class="row" data-v="5m+">$5,000,000+</button>
+      </div>
+    </section>
+
+    <!-- analyzing -->
+    <section class="step" data-step="analyze" hidden>
+      <div class="ring" aria-hidden="true"></div>
+      <h1 style="font-size:30px">Building your annuity plan…</h1>
+      <ul class="checks">
+        <li id="c1">Matching your age and retirement status</li>
+        <li id="c2">Comparing annuity types for your top priority</li>
+        <li id="c3">Selecting carriers for your portfolio size</li>
+      </ul>
+    </section>
+
+    <!-- 6 email -->
+    <section class="step" data-step="email" hidden>
+      <span class="pill green">$300–$500 Value · Free For Quiz Takers</span>
+      <h1>Your Personalized Annuity Plan Is Ready</h1>
+      <ul class="benefits">
+        <li><span><b>Your ideal annuity type</b> — and the 2 types to avoid</span></li>
+        <li><span><b>Estimated guaranteed income</b> based on your age &amp; savings</span></li>
+        <li><span><b>Rates as high as 7%*</b> from top carriers in your state</span></li>
+      </ul>
+      <p class="ask">Where should we send your free plan?</p>
+      <form class="fields" id="emailForm" novalidate>
+        <div class="two">
+          <input type="text" id="fname" name="fname" autocomplete="given-name" placeholder="First name">
+          <input type="text" id="lname" name="lname" autocomplete="family-name" placeholder="Last name">
+        </div>
+        <div class="emailwrap">
+          <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 6l9 7 9-7M3 19l7-7M21 19l-7-7"/></svg></div>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="Email address">
+        </div>
+        <p class="err" id="emailErr" style="text-align:left">Please enter your first name and a valid email address.</p>
+        <button class="btn wide" type="submit">Show Me My Free Plan
+          <svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+      <div class="advisor"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div>No spam. Your plan is yours to keep.</div></div>
+    </section>
+
+    <!-- 7 final -->
+    <section class="step" data-step="final" hidden>
+      <span class="pill">Final Step</span>
+      <h1 style="margin-bottom:6px">Last step!</h1>
+      <p class="hint" style="font-size:26px;font-weight:600;line-height:1.3;margin-bottom:28px;text-wrap:balance">Where should we text your free annuity plan?</p>
+      <form class="box" id="phoneForm" novalidate>
+        <label for="phone">Phone Number</label>
+        <div class="phone">
+          <div class="cc">🇺🇸 ▾</div>
+          <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+1 000 000 0000" inputmode="tel">
+        </div>
+        <p class="err" id="phoneErr">Please enter a valid 10-digit US phone number.</p>
+        <button class="confirm" type="button" id="confirmBtn">Confirm Phone Number</button>
+      </form>
+      <button class="btn" type="button" id="sendBtn">Text Me My Plan
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+      </button>
+      <div class="nospam"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div>No spam calls or texts. Ever.</div></div>
+      <div class="badges">
+        <span><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>256-bit Encrypted</span>
+        <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Verified Advisors</span>
+      </div>
+    </section>
+
+    <!-- done -->
+    <section class="step" data-step="done" hidden>
+      <span class="pill">You're all set</span>
+      <h1>Your plan is on its way.</h1>
+      <p class="hint light" style="max-width:34em">Watch for a text from a local number in the next few minutes. A licensed advisor will walk you through your options and answer any questions. No cost, no obligation.</p>
+      <div class="advisor"><div class="avatar" role="img" aria-label="Licensed advisor"></div><div><b>Thank you.</b> If you don't hear from us within one business day, reply to the text and we'll call you back.</div></div>
+    </section>
+
+  </main>
+
+  <div class="featured" id="featured">
+    <img src="data:image/webp;base64,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" alt="As featured in USA Today, Yahoo Finance and Benzinga" width="670" height="182" loading="lazy" decoding="async" style="max-width:420px;width:100%;height:auto;display:block;margin:0 auto">
+  </div>
+
+  <p class="tcpa" id="tcpa" hidden>By submitting, you agree to receive calls and/or texts at the number provided from Financiaro Retirement and its affiliated insurance agents. You agree to recurring contact via text and live, automated, or prerecorded calls, including for marketing. Consent is not a condition of any purchase. Msg &amp; data rates may apply. Reply STOP to opt out.</p>
+</div>
+
+<script>
+(function(){
+  // ====== CONFIG: branchez votre back-end ici (Zapier / Make / CRM) ======
+  var WEBHOOK_URL = "";
+  // Pages de remerciement (chemins relatifs, fonctionnent sur GitHub Pages / Netlify / Vercel)
+  var TYP_URL    = "typ.html";
+  var TYP_NQ_URL = "typ-nq.html";
+  // Qualifié = 55 ans ou plus ET portefeuille de 250K ou plus
+  function isQualified(){return lead.age!=="<55" && lead.portfolio!=="<250k";}
+
+  var lead={retired:"",age:"",worry:"",priority:"",portfolio:"",fname:"",lname:"",email:"",phone:"",source:location.href};
+  var order=["retired","age","worry","priority","portfolio","analyze","email","final","done"];
+  var dashSteps=["retired","age","worry","priority","portfolio","email","final"];
+  var steps={};document.querySelectorAll("[data-step]").forEach(function(s){steps[s.dataset.step]=s;});
+  var dashes=document.querySelectorAll("#dashes i");
+  var cur="retired";
+
+  function show(name){
+    Object.keys(steps).forEach(function(k){steps[k].hidden=(k!==name);});
+    cur=name;
+    var di=dashSteps.indexOf(name);
+    if(name==="analyze")di=4;
+    if(name==="done")di=6;
+    dashes.forEach(function(d,i){d.classList.toggle("on",i<=di);});
+    document.getElementById("dashes").hidden=(name==="done");
+    document.getElementById("tcpa").hidden=(name!=="final");
+    document.getElementById("featured").hidden=(name==="analyze"||name==="done");
+    window.scrollTo(0,0);
+  }
+  function next(){show(order[order.indexOf(cur)+1]);}
+
+  document.querySelectorAll(".card,.row").forEach(function(b){
+    b.addEventListener("click",function(){
+      var sec=b.closest("[data-step]"), step=sec.dataset.step;
+      sec.querySelectorAll(".card,.row").forEach(function(o){o.classList.remove("sel");});
+      b.classList.add("sel");
+      lead[step]=b.dataset.v;
+      setTimeout(function(){ if(step==="portfolio")runAnalyze(); else next(); },140);
+    });
+  });
+
+  function runAnalyze(){
+    show("analyze");
+    var ids=["c1","c2","c3"],i=0;
+    ids.forEach(function(id){document.getElementById(id).classList.remove("on");});
+    var t=setInterval(function(){
+      document.getElementById(ids[i]).classList.add("on");i++;
+      if(i===ids.length){clearInterval(t);setTimeout(function(){show("email");},500);}
+    },650);
+  }
+
+  function send(stage){
+    lead.stage=stage;
+    if(!WEBHOOK_URL)return;
+    try{fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(lead)}).catch(function(){});}catch(e){}
+  }
+
+  document.getElementById("emailForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    var fn=document.getElementById("fname"), em=document.getElementById("email"), ee=document.getElementById("emailErr");
+    var ok=fn.value.trim().length>0 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em.value.trim());
+    if(!ok){ee.style.display="block";(fn.value.trim()?em:fn).focus();return;}
+    ee.style.display="none";
+    lead.fname=fn.value.trim();lead.lname=document.getElementById("lname").value.trim();lead.email=em.value.trim();
+    send("email");
+    show("final");
+  });
+
+  var phone=document.getElementById("phone"), err=document.getElementById("phoneErr"), confirmBtn=document.getElementById("confirmBtn");
+  function digits(){return phone.value.replace(/\D/g,"").replace(/^1(?=\d{10}$)/,"");}
+  function valid(){return digits().length===10;}
+  phone.addEventListener("input",function(){
+    var d=phone.value.replace(/\D/g,"");
+    if(d.length>11)d=d.slice(0,11);
+    if(d.charAt(0)!=="1")d="1"+d;
+    var out="+1";
+    if(d.length>1)out+=" "+d.slice(1,4);
+    if(d.length>4)out+=" "+d.slice(4,7);
+    if(d.length>7)out+=" "+d.slice(7,11);
+    phone.value=out;
+    confirmBtn.classList.toggle("ready",valid());
+    if(valid())err.style.display="none";
+  });
+  function submit(){
+    if(!valid()){err.style.display="block";phone.focus();return;}
+    err.style.display="none";
+    lead.phone="+1"+digits();
+    lead.qualified=isQualified();
+    send("phone");
+    var dest=lead.qualified?TYP_URL:TYP_NQ_URL;
+    if(dest){window.location.href=dest;}else{show("done");}
+  }
+  confirmBtn.addEventListener("click",submit);
+  document.getElementById("sendBtn").addEventListener("click",submit);
+  document.getElementById("phoneForm").addEventListener("submit",function(e){e.preventDefault();submit();});
+
+  show("retired");
+})();
+</script>
