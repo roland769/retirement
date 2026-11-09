@@ -367,7 +367,8 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
 <script>
 (function(){
   // ====== CONFIG: branchez votre back-end ici (Zapier / Make / CRM) ======
-  var WEBHOOK_URL = "";
+  // Webhook GoHighLevel : appelé UNIQUEMENT pour les leads qualifiés (55+ et 250K+), à la soumission du téléphone
+  var WEBHOOK_URL = "https://services.leadconnectorhq.com/hooks/029BO0GsMOyMQqdlzocp/webhook-trigger/9b781b1b-3f4c-4aca-a30c-9ba37c1e8e2d";
   // Pages de remerciement (chemins relatifs, fonctionnent sur GitHub Pages / Netlify / Vercel)
   var TYP_URL    = "typ.html";
   var TYP_NQ_URL = "typ-nq.html";
@@ -416,11 +417,24 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
   }
 
   function send(stage){
-    lead.stage=stage;
-    if(!WEBHOOK_URL)return;
-    try{fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(lead)}).catch(function(){});}catch(e){}
+    if(!WEBHOOK_URL || !lead.qualified)return;
+    var labels={age:{"<55":"Under 55","55-59":"55-59","60-64":"60-64","65-75":"65-75",">75":"Over 75"},
+      portfolio:{"<250k":"Less than $250,000","250k-500k":"$250,000 - $500,000","500k-1m":"$500,000 - $1,000,000","1m-2m":"$1,000,000 - $2,000,000","2m-5m":"$2,000,000 - $5,000,000","5m+":"$5,000,000+"},
+      worry:{running_out:"Running out of money",market_loss:"Losing money in the markets",inflation:"Inflation",healthcare:"Healthcare & long term care costs"},
+      priority:{income:"Guaranteed retirement income",fixed_growth:"Growing money at a fixed rate",no_risk_growth:"Growing money with no market risk"}};
+    var payload={
+      first_name:lead.fname, last_name:lead.lname, email:lead.email, phone:lead.phone,
+      retired:lead.retired==="yes"?"Yes":"No",
+      age_range:labels.age[lead.age]||lead.age,
+      portfolio_value:labels.portfolio[lead.portfolio]||lead.portfolio,
+      biggest_worry:labels.worry[lead.worry]||lead.worry,
+      top_priority:labels.priority[lead.priority]||lead.priority,
+      qualified:"Yes", stage:stage,
+      source_url:location.href, submitted_at:new Date().toISOString(),
+      tcpa_consent:"Yes", tcpa_text:document.getElementById("tcpa").textContent.trim()
+    };
+    try{fetch(WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),keepalive:true}).catch(function(){});}catch(e){}
   }
-
   document.getElementById("emailForm").addEventListener("submit",function(e){
     e.preventDefault();
     var fn=document.getElementById("fname"), em=document.getElementById("email"), ee=document.getElementById("emailErr");
@@ -428,7 +442,6 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     if(!ok){ee.style.display="block";(fn.value.trim()?em:fn).focus();return;}
     ee.style.display="none";
     lead.fname=fn.value.trim();lead.lname=document.getElementById("lname").value.trim();lead.email=em.value.trim();
-    send("email");
     show("final");
   });
 
@@ -453,7 +466,7 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     lead.qualified=isQualified();
     send("phone");
     var dest=lead.qualified?TYP_URL:TYP_NQ_URL;
-    if(dest){window.location.href=dest;}else{show("done");}
+    if(dest){setTimeout(function(){window.location.href=dest;},150);}else{show("done");}
   }
   document.getElementById("sendBtn").addEventListener("click",submit);
   document.getElementById("phoneForm").addEventListener("submit",function(e){e.preventDefault();submit();});
