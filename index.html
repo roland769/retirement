@@ -1,5 +1,22 @@
 <title>Guaranteed Income Calculator</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '2055287805271330');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=2055287805271330&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
@@ -391,6 +408,7 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     },650);
   }
 
+  function track(ev,params){try{if(typeof fbq==="function")fbq("track",ev,params||{});}catch(e){}}
   function send(stage){
     lead.stage=stage;
     if(!WEBHOOK_URL)return;
@@ -405,6 +423,7 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     ee.style.display="none";
     lead.fname=fn.value.trim();lead.lname=document.getElementById("lname").value.trim();lead.email=em.value.trim();
     send("email");
+    track("Lead");
     show("final");
   });
 
@@ -429,6 +448,7 @@ label{display:block;font-size:20px;font-weight:400;margin:0 0 12px}
     lead.phone="+1"+digits();
     lead.qualified=isQualified();
     send("phone");
+    track("CompleteRegistration",{content_name:lead.qualified?"qualified":"non_qualified"});
     var dest=lead.qualified?TYP_URL:TYP_NQ_URL;
     if(dest){window.location.href=dest;}else{show("done");}
   }
